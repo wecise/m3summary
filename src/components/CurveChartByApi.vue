@@ -1,0 +1,181 @@
+<!-- 曲线 byapi-->
+<template>
+<div style="width:65%;text-align:center;">
+    <h5>{{title}}</h5>
+  <v-chart
+    :options="option"
+    :autoresize="true"
+  ></v-chart>
+  </div>
+</template>
+<script>
+import _ from "lodash"
+import ECharts from 'vue-echarts'
+import 'echarts/lib/chart/bar'
+import 'echarts/lib/chart/line'
+
+export default {
+  name: "CurveChartByApi",
+  components: {
+    'v-chart': ECharts
+  },
+  props: {
+    model: Object,
+    title: String
+  },
+  data() {
+    return {
+      option: {
+        title: {
+          text: "",
+          left: "center",
+          textStyle: {
+            fontSize: "14px",
+            color: "#999",
+          },
+        },
+        tooltip: {
+          trigger: "axis",
+        },
+        legend: {
+          color: [],
+          data: [],
+          left: "center",
+          bottom: "bottom",
+        },
+        grid: {
+          top: "middle",
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          height: "80%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          data: [],
+          axisLine: {
+            lineStyle: {
+              color: "#999",
+            },
+          },
+        },
+        yAxis: {
+          type: "value",
+
+          splitLine: {
+            lineStyle: {
+              type: "dashed",
+              color: "#DDD",
+            },
+          },
+          axisLine: {
+            show: false,
+            lineStyle: {
+              color: "#333",
+            },
+          },
+          nameTextStyle: {
+            color: "#999",
+          },
+          splitArea: {
+            show: false,
+          },
+        },
+        series: [],
+      },
+      colors: ["#F58080", "#47D8BE", "#F9A589", "#FF0000"],
+      kpi: ["span_avg", "span_max", "span_min", "volume"],
+    };
+  },
+  watch: {
+    model: {
+      handler(val) {
+        this.addData(val);
+      },
+      deep: true,
+    },
+  },
+  created() {
+    this.initData();
+    this.option.title.text = this.title;
+  },
+  mounted() {
+    
+  },
+  methods: {
+    initData() {
+      // legend
+      this.option.legend.color = this.colors;
+      this.option.legend.data = _.map(this.kpi, (v) => {
+        return this.model[v].title;
+      });
+      // xAxis
+      this.option.xAxis.data.push(this.moment().format("HH:mm:ss"));
+      // series
+      this.option.series = _.map(this.kpi, (v, index) => {
+        return {
+          name: this.model[v].title,
+          type: "line",
+          data: [this.model[v].value],
+          color: this.colors[index],
+          top: "10%",
+          bottomo: "30%",
+          lineStyle: {
+            normal: {
+              width: 0.5,
+              color: {
+                type: "linear",
+
+                colorStops: [
+                  {
+                    offset: 0,
+                    color: "#FFCAD4", // 0% 处的颜色
+                  },
+                  {
+                    offset: 0.4,
+                    color: "#F58080", // 100% 处的颜色
+                  },
+                  {
+                    offset: 1,
+                    color: "#F58080", // 100% 处的颜色
+                  },
+                ],
+                globalCoord: false, // 缺省为 false
+              },
+              shadowColor: "rgba(245,128,128, 0.5)",
+              shadowBlur: 10,
+              shadowOffsetY: 7,
+            },
+          },
+          itemStyle: {
+            normal: {
+              color: this.colors[index],
+              borderWidth: 1,
+              /*shadowColor: 'rgba(72,216,191, 0.3)',
+												shadowBlur: 100,*/
+              borderColor: this.colors[index],
+            },
+          },
+          smooth: true,
+        };
+      });
+    },
+    addData(val) {
+      // xAxis
+      this.option.xAxis.data.push(this.moment().format("HH:mm:ss"));
+      // series
+      _.forEach(this.kpi, (v, index) => {
+        this.option.series[index].data.push(val[v].value);
+      })
+    }
+  }
+};
+</script>
+
+<style>
+.echarts {
+  width: 100%;
+  height: 300px;
+}
+</style>
